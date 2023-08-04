@@ -1,1 +1,0 @@
-cmd_/home/ales/Documents/moduls/hello-check-point-module.ko := ld -r -m elf_x86_64 -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/ales/Documents/moduls/hello-check-point-module.ko /home/ales/Documents/moduls/hello-check-point-module.o /home/ales/Documents/moduls/hello-check-point-module.mod.o;  true
