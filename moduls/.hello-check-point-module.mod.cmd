@@ -1,0 +1,1 @@
+cmd_/home/ales/Documents/moduls/hello-check-point-module.mod := printf '%s\n'   hello-check-point-module.o | awk '!x[$$0]++ { print("/home/ales/Documents/moduls/"$$0) }' > /home/ales/Documents/moduls/hello-check-point-module.mod
