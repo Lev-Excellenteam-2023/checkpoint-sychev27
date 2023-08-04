@@ -7,7 +7,7 @@
 #include <linux/ip.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Eitan");
+MODULE_AUTHOR("Alex");
 MODULE_DESCRIPTION("Example for kernel module for ip src and dest");
 MODULE_VERSION("0.01");
 
@@ -25,7 +25,7 @@ static int hfunc(void *priv, struct sk_buff *skb, const struct nf_hook_state *st
 
 	iph = ip_hdr(skb);
 	src_ip = (unsigned int)iph->saddr;
-    	dest_ip= (unsigned int)iph->daddr;
+    dest_ip= (unsigned int)iph->daddr;
 	printk(KERN_INFO "src: %pI4 dest: %pI4\n", &src_ip, &dest_ip);
 	return NF_ACCEPT;
 }

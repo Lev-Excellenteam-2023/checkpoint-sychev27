@@ -6,6 +6,10 @@
 // Define the maximum number of schools, layers, and classes
 #define MAX_LAYERS 12
 #define MAX_CLASSES 10
+#define PATH_OF_DATA "/Users/alex/Documents/ios_projects/check_point_project/check_point_project/students-with-class.txt"
+#define NAME_BAFER 50
+#define PHONE_NAMBER_BAFER 20
+#define NUM_OF_GRADES 10
 
 enum menu_inputs {
     Insert = '0',
@@ -669,13 +673,10 @@ void menu(struct School* school) {
 }
 
 
-int main() {
-    // Initialize the data structures
-    struct School school;
-    memset(&school, 0, sizeof(struct School));
-
+int readDataFromFile(struct School* school, char* path) {
+   
     // Open the file for reading
-    FILE* file = fopen("/Users/alex/Documents/ios_projects/check_point_project/check_point_project/students-with-class.txt", "r");
+    FILE* file = fopen(PATH_OF_DATA, "r");
     if (file == NULL) {
         printf("Error opening file.\n");
         return 1;
@@ -684,38 +685,78 @@ int main() {
     // Read data from the file and populate the data structures
     char buffer[200];
     while (fgets(buffer, sizeof(buffer), file) != NULL) {
-        char firstName[50];
-        char lastName[50];
-        char phoneNumber[20];
+        char firstName[NAME_BAFER];
+        char lastName[NAME_BAFER];
+        char phoneNumber[PHONE_NAMBER_BAFER];
         int gradeNumber;
         int classNumber;
-        int grades[10];
+        int grades[NUM_OF_GRADES];
 
-        sscanf(buffer, "%s %s %s %d %d %d %d %d %d %d %d %d %d %d %d",
+       /* sscanf(buffer, "%s %s %s %d %d %d %d %d %d %d %d %d %d %d %d",
                firstName, lastName, phoneNumber,
                &gradeNumber, &classNumber,
                &grades[0], &grades[1], &grades[2], &grades[3], &grades[4],
-               &grades[5], &grades[6], &grades[7], &grades[8], &grades[9]);
+               &grades[5], &grades[6], &grades[7], &grades[8], &grades[9]);*/
+         sscanf(buffer, "%s %s %s %d %d",
+                firstName, lastName, phoneNumber,
+                &gradeNumber, &classNumber);
+        
+        
+
+        char* token = strtok(buffer, " "); // Get the first token (grade)
+        for (int i = 0; i < 5; i++) {
+            token = strtok(NULL, " "); // Move to the next token
+        }
+        
+        // Parse and fill the grades array using a loop
+        for (int i = 0; i < NUM_OF_GRADES; i++) {
+            int grade;
+            int numItems = sscanf(token, "%d", &grade);
+
+            if (numItems == 1) {
+                grades[i] = grade;
+            } else {
+                // If sscanf couldn't read a grade, break out of the loop
+                break;
+            }
+
+            token = strtok(NULL, " "); // Move to the next token (next grade)
+        }
 
         // Create a new student node
         struct Student* newStudent = createStudentNode(firstName, lastName, phoneNumber, gradeNumber, classNumber, grades);
 
         // Add the student to the corresponding class in the layer of the school
-        struct Class* currentClass = &school.layers[gradeNumber - 1].classes[classNumber - 1];
+        struct Class* currentClass = &school->layers[gradeNumber - 1].classes[classNumber - 1];
         addStudentToClass(currentClass, newStudent);
     }
 
     // Close the file
     fclose(file);
+    return 0;
+}
+
+// Free memory occupied by student nodes
+void freeStudentNodesMemory(struct School* school) {
+    
+    for (int i = 0; i < MAX_LAYERS; i++) {
+        for (int j = 0; j < MAX_CLASSES; j++) {
+            freeStudents(school->layers[i].classes[j].students);
+        }
+    }
+}
+
+
+int main() {
+    // Initialize the data structures
+    struct School school;
+    memset(&school, 0, sizeof(struct School));
+
+    readDataFromFile(&school, PATH_OF_DATA);
     
     menu(&school);
 
-    // Free memory occupied by student nodes
-    for (int i = 0; i < MAX_LAYERS; i++) {
-        for (int j = 0; j < MAX_CLASSES; j++) {
-            freeStudents(school.layers[i].classes[j].students);
-        }
-    }
+    freeStudentNodesMemory(&school);
 
     return 0;
 }
