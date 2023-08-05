@@ -7,6 +7,7 @@
 #define MAX_LAYERS 12
 #define MAX_CLASSES 10
 #define PATH_OF_DATA "/Users/alex/Documents/ios_projects/check_point_project/check_point_project/students-with-class.txt"
+#define PATH_OF_OUTPUT_DATA "/Users/alex/Documents/ios_projects/check_point_project/check_point_project/students_data.txt"
 #define NAME_BAFER 50
 #define PHONE_NAMBER_BAFER 20
 #define NUM_OF_GRADES 10
@@ -68,16 +69,15 @@ struct Student* createStudentNode(const char* firstName, const char* lastName, c
     return newStudent;
 }
 
+
 // Function to add a student to the class using a linked list
 void addStudentToClass(struct Class* classPtr, struct Student* student) {
     if (classPtr->students == NULL) {
         classPtr->students = student;
     } else {
         struct Student* current = classPtr->students;
-        while (current->next != NULL) {
-            current = current->next;
-        }
-        current->next = student;
+        classPtr->students = student;
+        classPtr->students->next = current;
     }
     classPtr->studentCount++;
 }
@@ -89,64 +89,6 @@ void insertStudent(struct School* school, struct Student* student) {
     struct Class* currentClass = &school->layers[student->gradeNumber - 1].classes[student->classNumber - 1];
     addStudentToClass(currentClass, student);
 }
-
-
-// Function to delete a student from the school's data structure by their first name and last name
-void deleteStudentByName(const char* firstName, const char* lastName, struct School* school) {
-    struct Student* temp; // Temporary pointer to hold the node to be deleted (if found)
-
-    // Loop through all layers in the school
-    for (int layer = 0; layer < MAX_LAYERS; layer++) {
-        // Loop through all classes in the current layer
-        for (int class = 0; class < MAX_CLASSES; class++) {
-            struct Student* current = school->layers[layer].classes[class].students;
-
-            // Check if the student to be deleted is the first student in the class
-            if (strcmp(current->firstName, firstName) == 0 && strcmp(current->lastName, lastName) == 0) {
-                // Update the head of the student list for the class
-                school->layers[layer].classes[class].students = current->next;
-                // Free the memory of the student node
-                free(current);
-                return; // Exit the function after deletion
-            }
-
-            // If the student is not the first in the class, search through the class's students
-            while (current->next != NULL) {
-                // Check if the next student in the class matches the first and last name
-                if (strcmp(current->next->firstName, firstName) == 0 && strcmp(current->next->lastName, lastName) == 0) {
-                    // Store the pointer to the node to be deleted
-                    temp = current->next;
-                    // Update the link to skip the student node to be deleted
-                    current->next = temp->next;
-                    // Free the memory of the student node
-                    free(temp);
-                    return; // Exit the function after deletion
-                }
-                // Move to the next student node in the class
-                current = current->next;
-            }
-        }
-    }
-}
-
-
-void deleteStudentByPhone(const char* phoneNumber, struct School* school) {
-    for (int layer = 0; layer < MAX_LAYERS; layer++) {
-        for (int class = 0; class < MAX_CLASSES; class++) {
-            struct Student* current = school->layers[layer].classes[class].students;
-            while (current != NULL) {
-                if (strcmp(current->next->phoneNumber, phoneNumber) == 0) {
-                    struct Student* temp = current->next;
-                    current->next = temp->next;
-                    free(temp);
-                    return;
-                }
-                current = current->next;
-            }
-        }
-    }
-}
-
 
 
 struct Student* findStudentByName(const char* firstName, const char* lastName, struct School* school) {
@@ -172,11 +114,6 @@ void printStudent(struct Student* student) {
         printf("%d ", student->grades[i]);
     }
     printf("\n\n");
-}
-
-void dataOfStudent(const char* firstName, const char* lastName, struct School* school) {
-    struct Student* student = findStudentByName(firstName, lastName, school);
-    printStudent(student);
 }
 
 // Function to perform Bubble Sort on an array of Students
@@ -206,6 +143,7 @@ void bubbleSort(struct TopTenStudents* topTenStudent, int column, int index) {
     }
 }
 
+
 void compareAndSwappStudentsbyGrade(struct TopTenStudents* topTenStudent, struct Student* student, int column, int index) {
     if (topTenStudent->topTenStudentsOfLayers[column][0]->grades[index] < student->grades[index]) {
         topTenStudent->topTenStudentsOfLayers[column][0] = student;
@@ -213,39 +151,47 @@ void compareAndSwappStudentsbyGrade(struct TopTenStudents* topTenStudent, struct
     }
 }
 
+
 // Function to find and sort the top ten students for each layer based on a specific grade
-void tenBestStudentsOfLayers(struct School* school, int gradeIndex, struct TopTenStudents* topTenStudent) {
-    // Step 1: Find the first ten students for each layer based on their grades
-    for (int layer = 0; layer < MAX_LAYERS; layer++) {
-        int count = 0;
-        for (int class = 0; class < MAX_CLASSES; class++) {
-            struct Student* current = school->layers[layer].classes[class].students;
-            while (current != NULL && count < 10) {
-                topTenStudent->topTenStudentsOfLayers[layer][count] = current;
-                count++;
-                current = current->next;
-            }
-            if (count == 10) {
-                // Sort the top ten students for the current layer based on the grade
-                bubbleSort(topTenStudent, layer, gradeIndex);
-                break;
+void tenBestStudentsOfLayers(struct School* school) {
+    printf("\n\tPlease Enter a gradeIndex (0-9): ");
+    int gradeIndex;
+    if (scanf("%d", &gradeIndex) == 1) {
+        struct TopTenStudents topTenStudent;
+    
+    
+        // Step 1: Find the first ten students for each layer based on their grades
+        for (int layer = 0; layer < MAX_LAYERS; layer++) {
+            int count = 0;
+            for (int class = 0; class < MAX_CLASSES; class++) {
+                struct Student* current = school->layers[layer].classes[class].students;
+                while (current != NULL && count < 10) {
+                    topTenStudent.topTenStudentsOfLayers[layer][count] = current;
+                    count++;
+                    current = current->next;
+                }
+                if (count == 10) {
+                    // Sort the top ten students for the current layer based on the grade
+                    bubbleSort(&topTenStudent, layer, gradeIndex);
+                    break;
+                }
             }
         }
-    }
-
-    // Step 2: Compare and swap students within the top ten students for each layer
-    for (int layer = 0; layer < MAX_LAYERS; layer++) {
-        for (int student = 0; student < 10; student++) {
-            struct Student* current = topTenStudent->topTenStudentsOfLayers[layer][student];
-            compareAndSwappStudentsbyGrade(topTenStudent, current, layer, gradeIndex);
+        
+        // Step 2: Compare and swap students within the top ten students for each layer
+        for (int layer = 0; layer < MAX_LAYERS; layer++) {
+            for (int student = 0; student < 10; student++) {
+                struct Student* current = topTenStudent.topTenStudentsOfLayers[layer][student];
+                compareAndSwappStudentsbyGrade(&topTenStudent, current, layer, gradeIndex);
+            }
         }
-    }
-
-    // Step 3: Print the top ten students for each layer
-    for (int layer = 0; layer < MAX_LAYERS; layer++) {
-        for (int student = 0; student < 10; student++) {
-            struct Student* current = topTenStudent->topTenStudentsOfLayers[layer][student];
-            printStudent(current);
+        
+        // Step 3: Print the top ten students for each layer
+        for (int layer = 0; layer < MAX_LAYERS; layer++) {
+            for (int student = 0; student < 10; student++) {
+                struct Student* current = topTenStudent.topTenStudentsOfLayers[layer][student];
+                printStudent(current);
+            }
         }
     }
 }
@@ -341,14 +287,14 @@ size_t get_input(char* dst, size_t max_size) {
 }
 
 
-void inputFirstName(char firstName[50]) {
+void inputFirstName(char firstName[NAME_BAFER]) {
 
     printf("Enter the first name of the student: ");
-    if (get_input(firstName, 50) != -1) {
+    if (get_input(firstName, NAME_BAFER) != -1) {
         // Check if the first name contains numbers and prompt the user again if it does
         while (containsNumbers(firstName)) {
             printf("Invalid input. First name cannot contain numbers. Enter the first name again: ");
-            if (get_input(firstName, 50) == -1)
+            if (get_input(firstName, NAME_BAFER) == -1)
                 return;
         }
     }
@@ -480,7 +426,18 @@ int averageGradesOfStudent(struct Student* student) {
 }
 
 
-long averageGradesOfCourse(int layer, int course, struct School* school) {
+void averageGradesOfCourse(struct School* school) {
+    int course;
+    int layer = inputLayer();
+    
+    printf("\n\tPlease Enter a Course (1-10): ");
+    if (scanf("%d", &course) == 1) {
+        if (course < 1 || course > 10) {
+            printf("\n\t A wrong course (1-10): ");
+            return;
+        }
+    }
+    
     int count = 0;
     long sum = 0;
     
@@ -492,8 +449,9 @@ long averageGradesOfCourse(int layer, int course, struct School* school) {
             current = current->next;
         }
     }
+    long average = sum / count;
     
-    return sum / count;
+    printf("An average of layer %d of course %d is %ld: ", layer, course, average);
 }
 
 
@@ -549,6 +507,94 @@ void writeAllStudentsToFile(struct School* school, const char* filename) {
     printf("Data written to %s. Count of students: %d\n", filename, count);
 }
 
+void dataOfStudent(struct School* school) {
+    // Prompt the user for first name and last name of the student to delete
+    char firstName[NAME_BAFER];
+    char lastName[NAME_BAFER];
+
+    fflush(stdin);
+    inputFirstName(firstName);
+    fflush(stdin);
+    inputLastName(lastName);
+    
+    struct Student* student = findStudentByName(firstName, lastName, school);
+    if (student != NULL) {
+        printStudent(student);
+    }
+    else {
+        printf("A student not found");
+    }
+}
+
+// Function to create a new student node
+struct Student* createStudent() {
+    char firstName[NAME_BAFER];
+    char lastName[NAME_BAFER];
+    char phoneNumber[NAME_BAFER];
+    int grades[NUM_OF_GRADES];
+    int layer;
+    int class;
+    
+    fflush(stdin);
+    inputFirstName(firstName);
+    fflush(stdin);
+    inputLastName(lastName);
+    fflush(stdin);
+    inputPhoneNamber(phoneNumber);
+    layer = inputLayer();
+    class = inputClass();
+    inputGrades(grades);
+    
+    return createStudentNode(firstName, lastName, phoneNumber, layer, class, grades);
+}
+
+// Function to delete a student from the school's data structure by their first name and last name
+void deleteStudentByName(struct School* school) {
+    // Prompt the user for first name and last name of the student to delete
+    char firstName[NAME_BAFER];
+    char lastName[NAME_BAFER];
+    
+    fflush(stdin);
+    inputFirstName(firstName);
+    fflush(stdin);
+    inputLastName(lastName);
+    
+    struct Student* temp; // Temporary pointer to hold the node to be deleted (if found)
+
+    // Loop through all layers in the school
+    for (int layer = 0; layer < MAX_LAYERS; layer++) {
+        // Loop through all classes in the current layer
+        for (int class = 0; class < MAX_CLASSES; class++) {
+            struct Student* current = school->layers[layer].classes[class].students;
+
+            // Check if the student to be deleted is the first student in the class
+            if (strcmp(current->firstName, firstName) == 0 && strcmp(current->lastName, lastName) == 0) {
+                // Update the head of the student list for the class
+                school->layers[layer].classes[class].students = current->next;
+                // Free the memory of the student node
+                free(current);
+                return; // Exit the function after deletion
+            }
+
+            // If the student is not the first in the class, search through the class's students
+            while (current->next != NULL) {
+                // Check if the next student in the class matches the first and last name
+                if (strcmp(current->next->firstName, firstName) == 0 && strcmp(current->next->lastName, lastName) == 0) {
+                    // Store the pointer to the node to be deleted
+                    temp = current->next;
+                    // Update the link to skip the student node to be deleted
+                    current->next = temp->next;
+                    // Free the memory of the student node
+                    free(temp);
+                    return; // Exit the function after deletion
+                }
+                // Move to the next student node in the class
+                current = current->next;
+            }
+        }
+    }
+}
+
 
 void menu(struct School* school) {
     char input;
@@ -574,92 +620,39 @@ void menu(struct School* school) {
         //getc(stdin);
         switch (input) {
             case Insert:{
-                char firstName[50];
-                char lastName[50];
-                char phoneNumber[50];
-                int grades[10];
-                int layer;
-                int class;
-                
-                fflush(stdin);
-                inputFirstName(firstName);
-                fflush(stdin);
-                inputLastName(lastName);
-                fflush(stdin);
-                inputPhoneNamber(phoneNumber);
-                layer = inputLayer();
-                class = inputClass();
-                inputGrades(grades);
-
-                struct Student* newStudent = createStudentNode(firstName, lastName, phoneNumber, layer, class, grades);
-                
+                struct Student* newStudent = createStudent();
                 insertStudent(school, newStudent);
                 break;
             }
             case Delete:{
-                // Prompt the user for first name and last name of the student to delete
-                char firstName[50];
-                char lastName[50];
-                
-                fflush(stdin);
-                inputFirstName(firstName);
-                fflush(stdin);
-                inputLastName(lastName);
-                
-                deleteStudentByName(firstName, lastName, school);
-                
+                deleteStudentByName(school);
                 break;
             }
             case Edit:
                 editGrage(school);
                 break;
             case Search:{
-                // Prompt the user for first name and last name of the student to delete
-                char firstName[50];
-                char lastName[50];
-
-                fflush(stdin);
-                inputFirstName(firstName);
-                fflush(stdin);
-                inputLastName(lastName);
-                
-                dataOfStudent(firstName, lastName, school);
+                dataOfStudent(school);
                 break;
             }
             case Showall:
                 printAllStudents(school);
                 break;
             case Top10:{
-                printf("\n\tPlease Enter a Course (0-9): ");
-                int course ;
-                if (scanf("%d", &course) == 1) {
-                    struct TopTenStudents topTenStudent ;
-                    tenBestStudentsOfLayers(school, course, &topTenStudent);
-                    break;
-                }
+                tenBestStudentsOfLayers(school);
+                break;
                 }
             case UnderperformedStudents:
                 underperformedSstudents(school);
                 break;
             case Average:{
-                int course;
-                int layer = inputLayer();
-                
-                printf("\n\tPlease Enter a Course (1-10): ");
-                if (scanf("%d", &course) == 1) {
-                    if (course < 1 || course > 10) {
-                        printf("\n\t A wrong course (1-10): ");
-                        break;
-                    }
-                }
-                
-                long average = averageGradesOfCourse(layer, course, school);
-                printf("An average of layer %d of course %d is %ld: ", layer, course, average);
+                averageGradesOfCourse(school);
                 break;
             }
-            case Export:
-                writeAllStudentsToFile(school, "/Users/alex/Documents/ios_projects/check_point_project/check_point_project/students_data.txt");
+            case Export:{
+                writeAllStudentsToFile(school, PATH_OF_OUTPUT_DATA);
                 break;
+            }
             case Exit:
                 break;
             default:
@@ -692,17 +685,8 @@ int readDataFromFile(struct School* school, char* path) {
         int classNumber;
         int grades[NUM_OF_GRADES];
 
-       /* sscanf(buffer, "%s %s %s %d %d %d %d %d %d %d %d %d %d %d %d",
-               firstName, lastName, phoneNumber,
-               &gradeNumber, &classNumber,
-               &grades[0], &grades[1], &grades[2], &grades[3], &grades[4],
-               &grades[5], &grades[6], &grades[7], &grades[8], &grades[9]);*/
-         sscanf(buffer, "%s %s %s %d %d",
-                firstName, lastName, phoneNumber,
-                &gradeNumber, &classNumber);
+        sscanf(buffer, "%s %s %s %d %d", firstName, lastName, phoneNumber, &gradeNumber, &classNumber);
         
-        
-
         char* token = strtok(buffer, " "); // Get the first token (grade)
         for (int i = 0; i < 5; i++) {
             token = strtok(NULL, " "); // Move to the next token
