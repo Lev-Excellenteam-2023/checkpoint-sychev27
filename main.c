@@ -116,39 +116,39 @@ void printStudent(struct Student* student) {
     printf("\n\n");
 }
 
-// Function to perform Bubble Sort on an array of Students
-void bubbleSort(struct TopTenStudents* topTenStudent, int column, int index) {
-    struct Student* temp;
-    int swapped;
-    int size = 10;
 
-    for (int i = 0; i < size - 1; i++) {
-        swapped = 0;
-
-        // Compare adjacent elements and swap them if they are in the wrong order
-        for (int j = 0; j < size - i - 1; j++) {
-            if (topTenStudent->topTenStudentsOfLayers[column][j]->grades[index] > topTenStudent->topTenStudentsOfLayers[column][j + 1]->grades[index]) {
-                // Swap elements
-                temp = topTenStudent->topTenStudentsOfLayers[column][j];
-                topTenStudent->topTenStudentsOfLayers[column][j] = topTenStudent->topTenStudentsOfLayers[column][j + 1];
-                topTenStudent->topTenStudentsOfLayers[column][j + 1] = temp;
-                swapped = 1;
+// Function to compare the given student's grade at the specified index with the top ten students' grades in the same layer.
+void compareAndSwappStudentsbyGrade(struct TopTenStudents* topTenStudent, struct Student* student, int column, int index) {
+    // Check if the student is already among the top ten students for the specified layer.
+    // If so, no further action is needed, and we return from the function.
+    for (int i = 0; i < 10; i++) {
+        if (topTenStudent->topTenStudentsOfLayers[column][i] == student)
+            return;
+    }
+    
+    // Initialize a temporary variable to track the position where the new student should be inserted.
+    int temp = -1;
+    
+    
+    // Loop through the current top ten students for the specified layer to compare their grades at the given index.
+    for (int i = 0; i < 10; i++) {
+        // If the student's grade is higher than the current topTenStudent's grade at the given index,
+        // update the temp variable to store the position where the student should be inserted.
+        if (topTenStudent->topTenStudentsOfLayers[column][i]->grades[index] < student->grades[index]) {
+            if (temp == -1) {
+                temp = i;
+            }
+            else {
+                // If the temp variable already holds a valid position, check if the current student's grade is higher than
+                // the student at the temp position. If so, update the temp position to store the new student's index.
+                if (topTenStudent->topTenStudentsOfLayers[column][i]->grades[index] < topTenStudent->topTenStudentsOfLayers[column][temp]->grades[index]) {
+                    temp = i;
+                }
             }
         }
-
-        // If no two elements were swapped in the inner loop, the array is already sorted
-        if (swapped == 0) {
-            break;
-        }
     }
-}
-
-
-void compareAndSwappStudentsbyGrade(struct TopTenStudents* topTenStudent, struct Student* student, int column, int index) {
-    if (topTenStudent->topTenStudentsOfLayers[column][0]->grades[index] < student->grades[index]) {
-        topTenStudent->topTenStudentsOfLayers[column][0] = student;
-        bubbleSort(topTenStudent, column, index);
-    }
+    // Finally, replace the student at the temp position in the top ten students array with the new student.
+    topTenStudent->topTenStudentsOfLayers[column][temp] = student;
 }
 
 
@@ -171,8 +171,6 @@ void tenBestStudentsOfLayers(struct School* school) {
                     current = current->next;
                 }
                 if (count == 10) {
-                    // Sort the top ten students for the current layer based on the grade
-                    bubbleSort(&topTenStudent, layer, gradeIndex);
                     break;
                 }
             }
@@ -182,7 +180,10 @@ void tenBestStudentsOfLayers(struct School* school) {
         for (int layer = 0; layer < MAX_LAYERS; layer++) {
             for (int student = 0; student < 10; student++) {
                 struct Student* current = topTenStudent.topTenStudentsOfLayers[layer][student];
-                compareAndSwappStudentsbyGrade(&topTenStudent, current, layer, gradeIndex);
+                while (current != NULL) {
+                    compareAndSwappStudentsbyGrade(&topTenStudent, current, layer, gradeIndex);
+                    current = current->next;
+                }
             }
         }
         
